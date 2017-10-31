@@ -11,6 +11,17 @@ var orientationValues = {
   W: 3
 };
 
+/*
+The world had 4 borders. Setting an item of a border array to true "seals" that border in that position.
+This happens when a robot falls off an edge. It will sea; (leave a scent) so that other robots will not fall from that same position.
+*/
+var borders = {
+  north: [],
+  east: [],
+  south: [],
+  west: []
+};
+
 fs.readFile("input.txt", "utf8", function(err, data) {
   if (err) throw err;
 
@@ -38,10 +49,8 @@ fs.readFile("input.txt", "utf8", function(err, data) {
 
     var newPos = processRobot(pos, lines[i + 1]);
 
-    console.log(newPos);
+    printRobotPosition(newPos);
   }
-
-  console.log(width, height);
 });
 
 // given a current orientation and direction, it returns the new orientation
@@ -80,7 +89,6 @@ function getNewCoordinatesAfterMove(x, y, orientation) {
 }
 
 function processRobot(pos, instructions) {
-  console.log("processing", pos, instructions);
   for (var i in instructions) {
     if (instructions[i] == "R" || instructions[i] == "L") {
       pos.orientation = getNewOrientation(pos.orientation, instructions[i]);
@@ -90,14 +98,32 @@ function processRobot(pos, instructions) {
         pos.y,
         pos.orientation
       );
-      if (
-        newCoordinates.x < 0 ||
-        newCoordinates.y < 0 ||
-        newCoordinates.x >= width ||
-        newCoordinates.y >= height
-      ) {
-        pos.lost = true;
-        return pos;
+
+      // saving scent so that new robots don't fall on the same edge in the same spot
+      if (newCoordinates.x < 0) {
+        if ("undefined" == typeof borders.west[newCoordinates.y]) {
+          borders.west[newCoordinates.y] = true;
+          pos.lost = true;
+          return pos;
+        }
+      } else if (newCoordinates.y < 0) {
+        if ("undefined" == typeof borders.south[newCoordinates.x]) {
+          borders.south[newCoordinates.x] = true;
+          pos.lost = true;
+          return pos;
+        }
+      } else if (newCoordinates.x >= width) {
+        if ("undefined" == typeof borders.east[newCoordinates.y]) {
+          borders.east[newCoordinates.y] = true;
+          pos.lost = true;
+          return pos;
+        }
+      } else if (newCoordinates.y >= height) {
+        if ("undefined" == typeof borders.north[newCoordinates.x]) {
+          borders.north[newCoordinates.x] = true;
+          pos.lost = true;
+          return pos;
+        }
       } else {
         pos.x = newCoordinates.x;
         pos.y = newCoordinates.y;
@@ -106,4 +132,10 @@ function processRobot(pos, instructions) {
   }
 
   return pos;
+}
+
+function printRobotPosition(pos) {
+  console.log(
+    pos.x + " " + pos.y + " " + pos.orientation + (pos.lost ? " LOST" : "")
+  );
 }
