@@ -6,9 +6,8 @@ var height = 0;
 
 var inputFile = "input.txt";
 
-
 // checking if input filename has been specified when running the process
-if ("undefined" !== process.argv[2]) {
+if ("undefined" !== typeof process.argv[2]) {
   inputFile = process.argv[2];
 }
 
