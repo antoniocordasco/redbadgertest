@@ -27,20 +27,21 @@ fs.readFile("input.txt", "utf8", function(err, data) {
     var split = lines[i].split(" ");
 
     let pos = {
-      x: split[0],
-      y: split[1],
-      orientation: split[2]
+      x: parseInt(split[0]),
+      y: parseInt(split[1]),
+      orientation: split[2],
+      lost: false
     };
 
     robotPositions.push(pos);
     robotInstructions.push(lines[i + 1]);
 
-    processRobot(pos, lines[i + 1]);
+    var newPos = processRobot(pos, lines[i + 1]);
+
+    console.log(newPos);
   }
 
   console.log(width, height);
-  console.log(robotPositions);
-  console.log(robotInstructions);
 });
 
 // given a current orientation and direction, it returns the new orientation
@@ -56,19 +57,53 @@ function getNewOrientation(orientation, dir) {
   if (val == -1) {
     val = 3;
   } else if (val == 4) {
-      val = 0;
+    val = 0;
   }
 
   return orientations[val];
 }
 
-function processRobot(pos, instructions) {
-  console.log("pos", pos);
-  getNewOrientation(pos.orientation, "R");
-  getNewOrientation(pos.orientation, "L");
+function getNewCoordinatesAfterMove(x, y, orientation) {
+  switch (orientation) {
+    case "N":
+      return { x: x, y: y + 1 };
+      break;
+    case "E":
+      return { x: x + 1, y: y };
+      break;
+    case "S":
+      return { x: x, y: y - 1 };
+      break;
+    default:
+      return { x: x - 1, y: y };
+  }
+}
 
+function processRobot(pos, instructions) {
+  console.log("processing", pos, instructions);
   for (var i in instructions) {
+    if (instructions[i] == "R" || instructions[i] == "L") {
+      pos.orientation = getNewOrientation(pos.orientation, instructions[i]);
+    } else {
+      var newCoordinates = getNewCoordinatesAfterMove(
+        pos.x,
+        pos.y,
+        pos.orientation
+      );
+      if (
+        newCoordinates.x < 0 ||
+        newCoordinates.y < 0 ||
+        newCoordinates.x >= width ||
+        newCoordinates.y >= height
+      ) {
+        pos.lost = true;
+        return pos;
+      } else {
+        pos.x = newCoordinates.x;
+        pos.y = newCoordinates.y;
+      }
+    }
   }
 
-  console.log(width, height);
+  return pos;
 }
